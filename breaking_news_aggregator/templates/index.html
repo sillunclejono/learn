@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Breaking News Aggregator</title>
+  <style>
+    body {
+      background-color: #f0f0f0;
+      font-family: "Courier New", Courier, monospace;
+      color: #000;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      width: 80%;
+      margin: 0 auto;
+      background-color: #fff;
+      padding: 20px;
+      border: 2px solid #000;
+    }
+    h1 {
+      text-align: center;
+      font-size: 36px;
+      margin: 0 0 20px 0;
+    }
+    .article {
+      margin-bottom: 40px;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: bold;
+    }
+    .summary {
+      margin-top: 10px;
+    }
+    hr {
+      border: none;
+      border-top: 1px dashed #333;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Breaking News</h1>
+    {% for article in articles %}
+    <div class="article">
+      <div class="title"><a href="{{ article.url }}" target="_blank">{{ article.title }}</a></div>
+      <div class="summary">{{ article.summary }}</div>
+    </div>
+    <hr>
+    {% endfor %}
+  </div>
+</body>
+</html>
