@@ -4,13 +4,60 @@ from crewai import Crew, Process, Task, Agent
 from browserbase import browserbase
 from kayak import kayak
 from dotenv import load_dotenv
+from airline_search_optimizer import FareOption, optimize_fare_options
 
 load_dotenv()  # take environment variables from .env.
 
+
+def build_sample_fare_optimization_report() -> str:
+    sample_fares = [
+        FareOption(
+            airline="Delta",
+            booking_class="Y",
+            base_fare=410,
+            taxes=64.8,
+            fare_type="public",
+            refundable=False,
+            baggage_included=True,
+        ),
+        FareOption(
+            airline="United",
+            booking_class="J",
+            base_fare=520,
+            taxes=70.5,
+            contract_code="CORP-UNITED-042",
+            fare_type="private_net",
+            refundable=True,
+            baggage_included=True,
+        ),
+        FareOption(
+            airline="American",
+            booking_class="D",
+            base_fare=495,
+            taxes=69.2,
+            contract_code="TA-7781",
+            fare_type="net",
+            refundable=True,
+            baggage_included=False,
+        ),
+    ]
+
+    ranked = optimize_fare_options(sample_fares)
+    lines = ["Ranked fare options (booking class + contracts + private/net fares):"]
+    for idx, fare in enumerate(ranked, start=1):
+        lines.append(
+            f"{idx}. {fare['airline']} | class {fare['booking_class']} | "
+            f"contract {fare['contract_code']} | type {fare['fare_type']} | "
+            f"private/net={fare['is_private_net_fare']} | total ${fare['total_price']} | "
+            f"score {fare['score']}"
+        )
+    return "\n".join(lines)
+
+
 flights_agent = Agent(
     role="Flights",
-    goal="Search flights",
-    backstory="I am an agent that can search for flights.",
+    goal="Search and optimize flights including booking classes, contracts, and private net fares",
+    backstory="I am an airline pricing analyst agent that can search flights, compare booking classes, inspect contract fares, and prioritize private net fares.",
     tools=[kayak, browserbase],
     allow_delegation=False,
 )
@@ -29,7 +76,8 @@ Here are our top 5 flights from San Francisco to New York on 21st September 2024
 
 search_task = Task(
     description=(
-        "Search flights according to criteria {request}. Current year: {current_year}"
+        "Search flights according to criteria {request}. Current year: {current_year}. "
+        "Include booking classes for each option and identify potential contract fares and private net fares when visible."
     ),
     expected_output=output_search_example,
     agent=flights_agent,
@@ -47,7 +95,10 @@ Here are our top 5 picks from San Francisco to New York on 21st September 2024:
 """
 
 search_booking_providers_task = Task(
-    description="Load every flight individually and find available booking providers",
+    description=(
+        "Load every flight individually and find available booking providers. "
+        "Capture booking class, contract identifiers (if present), and whether a fare appears private/net."
+    ),
     expected_output=output_providers_example,
     agent=flights_agent,
 )
@@ -76,3 +127,4 @@ if __name__ == "__main__":
     )
 
     print(result)
+    print("\n" + build_sample_fare_optimization_report())
