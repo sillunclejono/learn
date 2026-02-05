@@ -6,6 +6,7 @@ from crewai import Crew, Process, Task, Agent
 from browserbase import browserbase
 from kayak import kayak
 from dotenv import load_dotenv
+from airline_search_optimizer import FareOption, optimize_fare_options
 
 # Page configuration
 st.set_page_config(page_title="✈️ FlightFinder Pro", layout="wide")
@@ -58,8 +59,8 @@ search_button = st.button("Search Flights")
 # Initialize agents
 flights_agent = Agent(
     role="Flights",
-    goal="Search flights",
-    backstory="I am an agent that can search for flights.",
+    goal="Search and optimize flights including booking classes, contracts, and private net fares",
+    backstory="I am an airline pricing analyst agent that can search flights, compare booking classes, inspect contract fares, and prioritize private net fares.",
     tools=[kayak, browserbase],
     allow_delegation=False,
 )
@@ -78,7 +79,8 @@ Here are our top 5 flights from San Francisco to New York on 21st September 2024
 
 search_task = Task(
     description=(
-        "Search flights according to criteria {request}. Current year: {current_year}"
+        "Search flights according to criteria {request}. Current year: {current_year}. "
+        "Include booking classes for each option and identify potential contract fares and private net fares when visible."
     ),
     expected_output=output_search_example,
     agent=flights_agent,
@@ -96,10 +98,39 @@ Here are our top 5 picks from San Francisco to New York on 21st September 2024:
 """
 
 search_booking_providers_task = Task(
-    description="Load every flight individually and find available booking providers",
+    description=(
+        "Load every flight individually and find available booking providers. "
+        "Capture booking class, contract identifiers (if present), and whether a fare appears private/net."
+    ),
     expected_output=output_providers_example,
     agent=flights_agent,
 )
+
+def build_sample_fare_table():
+    sample_fares = [
+        FareOption("Delta", "Y", 410, 64.8, fare_type="public", baggage_included=True),
+        FareOption(
+            "United",
+            "J",
+            520,
+            70.5,
+            contract_code="CORP-UNITED-042",
+            fare_type="private_net",
+            refundable=True,
+            baggage_included=True,
+        ),
+        FareOption(
+            "American",
+            "D",
+            495,
+            69.2,
+            contract_code="TA-7781",
+            fare_type="net",
+            refundable=True,
+        ),
+    ]
+    return optimize_fare_options(sample_fares)
+
 
 # Search functionality
 if search_button:
@@ -141,3 +172,6 @@ st.markdown("""
 This application uses AI agents to search for flights and find the best deals for you.
 Simply enter your origin, destination, and travel date to get started.
 """)
+st.markdown("### Fare Optimizer Preview")
+st.caption("Sample ranking logic for booking classes, contracts, and private/net fares.")
+st.dataframe(build_sample_fare_table(), use_container_width=True)
