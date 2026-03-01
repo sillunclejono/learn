@@ -23,8 +23,8 @@ summarize_agent = Agent(
 )
 
 output_search_example = """
-Here are our top 5 flights from San Francisco to New York on 21st September 2024:
-1. Delta Airlines: Departure: 21:35, Arrival: 03:50, Duration: 6 hours 15 minutes, Price: $125, Details: https://www.kayak.com/flights/sfo/jfk/2024-09-21/12:45/13:55/2:10/delta/airlines/economy/1
+Here are our top 5 international flights from Adelaide (ADL) this week for 2 adults + 1 infant:
+1. Singapore Airlines: ADL → SIN, Departure: 10:30, Arrival: 16:45, Duration: 8 hours 15 minutes, Price: AUD 950 per adult, Details: https://www.kayak.com/flights/ADL-SIN/2026-03-05/2adults/1infant_on_lap?currency=AUD
 """
 
 search_task = Task(
@@ -36,13 +36,13 @@ search_task = Task(
 )
 
 output_providers_example = """
-Here are our top 5 picks from San Francisco to New York on 21st September 2024:
-1. Delta Airlines:
-    - Departure: 21:35
-    - Arrival: 03:50
-    - Duration: 6 hours 15 minutes
-    - Price: $125
-    - Booking: [Delta Airlines](https://www.kayak.com/flights/sfo/jfk/2024-09-21/12:45/13:55/2:10/delta/airlines/economy/1)
+Here are our top 5 international picks from Adelaide (ADL) this week for 2 adults + 1 infant:
+1. Singapore Airlines (ADL → SIN):
+    - Departure: 10:30
+    - Arrival: 16:45
+    - Duration: 8 hours 15 minutes
+    - Price: AUD 950 per adult (infant fee may apply)
+    - Booking: [Singapore Airlines](https://www.kayak.com/flights/ADL-SIN/2026-03-05/2adults/1infant_on_lap?currency=AUD)
     ...
 """
 
@@ -70,7 +70,12 @@ crew = Crew(
 if __name__ == "__main__":
     result = crew.kickoff(
         inputs={
-            "request": "flights from SF to New York on November 5th",
+            "request": (
+                "International flights from Adelaide (ADL) this week "
+                "(between 2026-03-01 and 2026-03-07) for 2 adults and 1 infant (on lap). "
+                "Find the best available international routes and prices. "
+                "Use AUD currency."
+            ),
             "current_year": datetime.date.today().year,
         }
     )
